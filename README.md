@@ -28,4 +28,4 @@ flask db upgrade
 Запуск приложения
 flask run
 
-Приложение будет доступно по адресу: http://localhost:5000
+http://localhost:5000

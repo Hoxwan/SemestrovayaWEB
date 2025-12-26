@@ -1,5 +1,5 @@
 # Flask Framework
-Flask==2.3.3  # Изменили с 3.0.0 на 2.3.3 для совместимости
+Flask==2.3.3
 Flask-SQLAlchemy==3.0.5
 Flask-WTF==1.2.1
 Flask-Login==0.6.3
@@ -25,7 +25,7 @@ flasgger==0.9.7.1
 # Frontend
 Bootstrap-Flask==2.2.0
 
-# Testing - ОБНОВЛЕНО
+# Testing
 pytest==7.4.3
 pytest-flask==1.2.0
 
