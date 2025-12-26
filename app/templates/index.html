@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">Добро пожаловать в Task Manager</h3>
+            </div>
+            <div class="card-body">
+                {% if current_user.is_authenticated %}
+                    <p class="text-center">Привет, {{ current_user.username }}!</p>
+
+                    {% if total_tasks is defined %}
+                    <div class="row text-center mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5>{{ total_tasks }}</h5>
+                                    <p class="text-muted">Всего задач</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5>{{ completed_tasks }}</h5>
+                                    <p class="text-muted">Завершено</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5>{{ total_tasks - completed_tasks }}</h5>
+                                    <p class="text-muted">Активных</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="text-center">
+                        <a href="{{ url_for('main.tasks') }}" class="btn btn-primary btn-lg mx-2">Мои задачи</a>
+                        <a href="{{ url_for('main.new_task') }}" class="btn btn-success btn-lg mx-2">Создать задачу</a>
+                        <a href="{{ url_for('main.categories') }}" class="btn btn-info btn-lg mx-2">Категории</a>
+                    </div>
+
+                    {% if recent_tasks %}
+                    <div class="mt-5">
+                        <h5>Последние задачи</h5>
+                        <div class="list-group">
+                            {% for task in recent_tasks %}
+                            <a href="{{ url_for('main.view_task', id=task.id) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ task.title }}</h6>
+                                    <small class="text-muted">{{ task.created_at.strftime('%d.%m.%Y') }}</small>
+                                </div>
+                                <p class="mb-1">{{ task.description|truncate(100) }}</p>
+                                <small>
+                                    <span class="badge bg-{{ 'success' if task.status.value == 'Завершено' else 'warning' }}">
+                                        {{ task.status.value }}
+                                    </span>
+                                    <span class="badge bg-{{ 'danger' if task.priority.value == 'Высокий' else 'info' }}">
+                                        {{ task.priority.value }}
+                                    </span>
+                                </small>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <p class="text-center">Task Manager - это удобное веб-приложение для управления вашими задачами.</p>
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg mx-2">Зарегистрироваться</a>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg mx-2">Войти</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

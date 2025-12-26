@@ -1,0 +1,34 @@
+# Flask Framework
+Flask==2.3.3  # Изменили с 3.0.0 на 2.3.3 для совместимости
+Flask-SQLAlchemy==3.0.5
+Flask-WTF==1.2.1
+Flask-Login==0.6.3
+Flask-RESTful==0.3.10
+Flask-Migrate==4.0.5
+Flask-CORS==4.0.0
+
+# Database
+SQLAlchemy==2.0.25
+alembic==1.13.1
+
+# Forms and Validation
+WTForms==3.1.0
+email-validator==2.1.1
+
+# Authentication
+passlib==1.7.4
+PyJWT==2.8.0
+
+# Documentation
+flasgger==0.9.7.1
+
+# Frontend
+Bootstrap-Flask==2.2.0
+
+# Testing - ОБНОВЛЕНО
+pytest==7.4.3
+pytest-flask==1.2.0
+
+# Utilities
+python-dotenv==1.0.0
+Werkzeug==2.3.7

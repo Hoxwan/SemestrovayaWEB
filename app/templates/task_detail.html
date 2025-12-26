@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}{{ task.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4>{{ task.title }}</h4>
+                        <div>
+                            <a href="{{ url_for('main.edit_task', id=task.id) }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-pencil"></i> Изменить
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6>Описание:</h6>
+                        <p>{{ task.description or 'Нет описания' }}</p>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <h6>Приоритет:</h6>
+                            <span class="badge bg-{{ 'danger' if task.priority.value == 'Высокий' else 'warning' if task.priority.value == 'Средний' else 'info' }}">
+                                {{ task.priority.value }}
+                            </span>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Статус:</h6>
+                            <span class="badge bg-{{ 'success' if task.status.value == 'Завершено' else 'primary' if task.status.value == 'В процессе' else 'secondary' }}">
+                                {{ task.status.value }}
+                            </span>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Срок:</h6>
+                            <p>{{ task.due_date.strftime('%d.%m.%Y') if task.due_date else 'Не указан' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>Создано:</h6>
+                            <p>{{ task.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Обновлено:</h6>
+                            <p>{{ task.updated_at.strftime('%d.%m.%Y %H:%M') if task.updated_at else 'Не обновлялось' }}</p>
+                        </div>
+                    </div>
+
+                    {% if task.completed_at %}
+                    <div class="alert alert-success">
+                        <h6><i class="bi bi-check-circle"></i> Завершено:</h6>
+                        <p>{{ task.completed_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('main.tasks') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Назад к задачам
+                        </a>
+<form method="POST" action="{{ url_for('main.delete_task', id=task.id) }}" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-danger" onclick="return confirm('Удалить задачу?')">
+        <i class="bi bi-trash"></i> Удалить
+    </button>
+</form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
