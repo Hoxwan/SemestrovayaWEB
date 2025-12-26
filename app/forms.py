@@ -44,7 +44,12 @@ class TaskForm(FlaskForm):
         (Status.COMPLETED.value, 'Завершено')
     ], default=Status.PENDING.value)
     due_date = DateField('Срок выполнения', format='%Y-%m-%d', validators=[Optional()])
+    category_id = SelectField('Категория', coerce=int, validators=[Optional()])
     submit = SubmitField('Сохранить')
+
+    def __init__(self, *args, **kwargs):
+        super(TaskForm, self).__init__(*args, **kwargs)
+        self.category_id.choices = [(0, 'Без категории')]  # По умолчанию
 
 
 class CategoryForm(FlaskForm):

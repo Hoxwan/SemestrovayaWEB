@@ -34,6 +34,7 @@ def index():
 def tasks():
     page = request.args.get('page', 1, type=int)
     status_filter = request.args.get('status', 'all')
+    category_filter = request.args.get('category', 'all')
     search = request.args.get('search', '')
 
     query = Task.query.filter_by(user_id=current_user.id)
@@ -45,6 +46,33 @@ def tasks():
                 Task.description.ilike(f'%{search}%')
             )
         )
+
+    if status_filter == 'completed':
+        query = query.filter_by(status=Status.COMPLETED)
+    elif status_filter == 'pending':
+        query = query.filter_by(status=Status.PENDING)
+    elif status_filter == 'in_progress':
+        query = query.filter_by(status=Status.IN_PROGRESS)
+
+    if category_filter != 'all':
+        try:
+            category_id = int(category_filter)
+            query = query.filter_by(category_id=category_id)
+        except ValueError:
+            pass
+
+    tasks = query.order_by(Task.created_at.desc()) \
+        .paginate(page=page, per_page=10, error_out=False)
+
+    categories = Category.query.filter_by(user_id=current_user.id).all()
+
+    return render_template('tasks.html',
+                           tasks=tasks,
+                           status_filter=status_filter,
+                           category_filter=category_filter,
+                           search=search,
+                           categories=categories,
+                           datetime=datetime)
 
     if status_filter == 'completed':
         query = query.filter_by(status=Status.COMPLETED)
@@ -71,6 +99,10 @@ def tasks():
 def new_task():
     form = TaskForm()
 
+    # Загружаем категории пользователя
+    categories = Category.query.filter_by(user_id=current_user.id).all()
+    form.category_id.choices = [(0, 'Без категории')] + [(c.id, c.name) for c in categories]
+
     if form.validate_on_submit():
         task = Task(
             title=form.title.data,
@@ -78,7 +110,8 @@ def new_task():
             priority=Priority(form.priority.data),
             status=Status(form.status.data),
             due_date=form.due_date.data,
-            user_id=current_user.id
+            user_id=current_user.id,
+            category_id=form.category_id.data if form.category_id.data != 0 else None
         )
         db.session.add(task)
         db.session.commit()
@@ -88,7 +121,8 @@ def new_task():
     return render_template('task_form.html',
                            title='Новая задача',
                            form=form,
-                           action_url=url_for('main.new_task'))
+                           action_url=url_for('main.new_task'),
+                           categories=categories)
 
 
 @main_bp.route('/task/<int:id>')
@@ -112,12 +146,20 @@ def edit_task(id):
 
     form = TaskForm(obj=task)
 
+    # Загружаем категории пользователя
+    categories = Category.query.filter_by(user_id=current_user.id).all()
+    form.category_id.choices = [(0, 'Без категории')] + [(c.id, c.name) for c in categories]
+
+    # Устанавливаем текущую категорию
+    form.category_id.data = task.category_id if task.category_id else 0
+
     if form.validate_on_submit():
         task.title = form.title.data
         task.description = form.description.data
         task.priority = Priority(form.priority.data)
         task.status = Status(form.status.data)
         task.due_date = form.due_date.data
+        task.category_id = form.category_id.data if form.category_id.data != 0 else None
         task.updated_at = datetime.utcnow()
         db.session.commit()
         flash('Задача успешно обновлена!', 'success')
@@ -126,7 +168,8 @@ def edit_task(id):
     return render_template('task_form.html',
                            title='Редактировать задачу',
                            form=form,
-                           action_url=url_for('main.edit_task', id=id))
+                           action_url=url_for('main.edit_task', id=id),
+                           categories=categories)
 
 
 @main_bp.route('/task/<int:id>/delete', methods=['POST'])
@@ -148,12 +191,21 @@ def delete_task(id):
 def complete_task(id):
     task = Task.query.get_or_404(id)
     if task.user_id != current_user.id:
-        return jsonify({'error': 'Нет прав'}), 403
+        flash('У вас нет прав для выполнения этой операции', 'danger')
+        return redirect(url_for('main.tasks'))
 
-    task.status = Status.COMPLETED
-    task.completed_at = datetime.utcnow()
+    # Переключаем статус
+    if task.status == Status.COMPLETED:
+        task.status = Status.PENDING
+        task.completed_at = None
+        flash('Задача возвращена в работу', 'info')
+    else:
+        task.status = Status.COMPLETED
+        task.completed_at = datetime.utcnow()
+        flash('Задача отмечена как выполненная', 'success')
+
     db.session.commit()
-    return jsonify({'success': True})
+    return redirect(url_for('main.tasks'))
 
 
 @main_bp.route('/categories')

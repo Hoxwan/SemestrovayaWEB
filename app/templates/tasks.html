@@ -15,10 +15,10 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" action="{{ url_for('main.tasks') }}" class="row g-3">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <input type="text" class="form-control" name="search" placeholder="Поиск задач..." value="{{ search }}">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <select class="form-select" name="status" onchange="this.form.submit()">
                         <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Все статусы</option>
                         <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>В ожидании</option>
@@ -26,8 +26,18 @@
                         <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Завершено</option>
                     </select>
                 </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="category" onchange="this.form.submit()">
+                        <option value="all" {% if category_filter == 'all' %}selected{% endif %}>Все категории</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category_filter == category.id|string %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <div class="col-md-2">
-                    <button type="submit" class="btn btn-outline-secondary w-100">Поиск</button>
+                    <button type="submit" class="btn btn-outline-secondary w-100">Фильтр</button>
                 </div>
             </form>
         </div>
@@ -43,6 +53,7 @@
                             <tr>
                                 <th>Статус</th>
                                 <th>Задача</th>
+                                <th>Категория</th>
                                 <th>Приоритет</th>
                                 <th>Срок</th>
                                 <th>Создано</th>
@@ -53,12 +64,13 @@
                             {% for task in tasks.items %}
                             <tr class="{% if task.status.value == 'Завершено' %}table-success{% endif %}">
                                 <td>
-<form method="POST" action="{{ url_for('main.complete_task', id=task.id) }}" class="d-inline complete-task-form" data-task-id="{{ task.id }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="checkbox"
-           class="form-check-input task-complete-checkbox"
-           {% if task.status.value == 'Завершено' %}checked{% endif %}>
-</form>
+                                    <form method="POST" action="{{ url_for('main.complete_task', id=task.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="checkbox"
+                                               class="form-check-input"
+                                               {% if task.status.value == 'Завершено' %}checked{% endif %}
+                                               onchange="this.form.submit()">
+                                    </form>
                                 </td>
                                 <td>
                                     <a href="{{ url_for('main.view_task', id=task.id) }}" class="text-decoration-none">
@@ -69,6 +81,15 @@
                                     {% endif %}
                                 </td>
                                 <td>
+                                    {% if task.task_category %}
+                                        <span class="badge" style="background-color: {{ task.task_category.color }};">
+                                            {{ task.task_category.name }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">Без категории</span>
+                                    {% endif %}
+                                </td>
+                                <td>
                                     <span class="badge bg-{{ 'danger' if task.priority.value == 'Высокий' else 'warning' if task.priority.value == 'Средний' else 'info' }}">
                                         {{ task.priority.value }}
                                     </span>
@@ -76,9 +97,6 @@
                                 <td>
                                     {% if task.due_date %}
                                         {{ task.due_date.strftime('%d.%m.%Y') }}
-                                        {% if task.due_date < datetime.now() and task.status.value != 'Завершено' %}
-                                            <br><small class="text-danger">Просрочено</small>
-                                        {% endif %}
                                     {% else %}
                                         <span class="text-muted">Не указан</span>
                                     {% endif %}
@@ -108,19 +126,19 @@
                     <ul class="pagination justify-content-center">
                         {% if tasks.has_prev %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('main.tasks', page=tasks.prev_num, status=status_filter, search=search) }}">Назад</a>
+                                <a class="page-link" href="{{ url_for('main.tasks', page=tasks.prev_num, status=status_filter, category=category_filter, search=search) }}">Назад</a>
                             </li>
                         {% endif %}
                         {% for page_num in tasks.iter_pages() %}
                             {% if page_num %}
                                 <li class="page-item {% if page_num == tasks.page %}active{% endif %}">
-                                    <a class="page-link" href="{{ url_for('main.tasks', page=page_num, status=status_filter, search=search) }}">{{ page_num }}</a>
+                                    <a class="page-link" href="{{ url_for('main.tasks', page=page_num, status=status_filter, category=category_filter, search=search) }}">{{ page_num }}</a>
                                 </li>
                             {% endif %}
                         {% endfor %}
                         {% if tasks.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('main.tasks', page=tasks.next_num, status=status_filter, search=search) }}">Вперед</a>
+                                <a class="page-link" href="{{ url_for('main.tasks', page=tasks.next_num, status=status_filter, category=category_filter, search=search) }}">Вперед</a>
                             </li>
                         {% endif %}
                     </ul>
